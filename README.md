@@ -1,25 +1,132 @@
-# Healthmate-App 統合デプロイメント管理
+# Healthmate-App あなたに寄り添う健康コーチAI
+
+## 📋 目次
+
+- [🏥 Healthmate App について](#-healthmate-app-について)
+- [🏗️ アーキテクチャ概要](#️-アーキテクチャ概要)
+- [🎯 使用例](#-使用例)
+- [🚀 クイックスタート](#-クイックスタート)
+- [📋 コマンドリファレンス](#-コマンドリファレンス)
+- [🔧 環境設定](#-環境設定)
+- [📊 ログとモニタリング](#-ログとモニタリング)
+- [🛠️ トラブルシューティング](#️-トラブルシューティング)
+- [🔄 開発ワークフロー](#-開発ワークフロー)
+
+---
+
+## 🏥 Healthmate App について
+
+**Healthmate App** は、AI駆動の包括的健康管理プラットフォームです。ユーザーが短期・中期・長期の様々な健康目標を達成できるよう、パーソナライズされたAI健康コーチがサポートします。
+
+### 🎯 対応する健康目標
+
+- **短期目標（1週間〜3ヶ月）**: 体重3kg減量、毎日1万歩歩く、禁煙・禁酒
+- **中期目標（3ヶ月〜2年）**: 半年でダイエット成功、2年間でアスリート体型、マラソン完走
+- **長期目標（2年以上）**: 100歳まで健康に生きる、生涯現役で働く、健康寿命の延伸
+
+### 🎯 主な機能
+
+- **🤖 AI健康コーチ**: ユーザーの健康データに基づくパーソナライズされたアドバイス
+- **📊 健康データ管理**: 目標設定、活動記録、健康ポリシーの管理
+- **😟 健康上の心配事管理**: 体調不良、症状、不安などの心配事を記録・相談
+- **📱 Webアプリケーション**: モダンなReactベースのユーザーインターフェース
+- **🔐 セキュアな認証**: Amazon Cognitoによる安全なユーザー管理
+- **💬 継続的な対話**: セッション記憶機能による自然な会話体験
+
+### 🌟 特徴
+
+- **日本語対応**: 日本語での自然な対話とインターフェース
+- **クラウドネイティブ**: AWS上でのスケーラブルなサーバーレス構成
+- **AI統合**: Amazon Bedrock AgentCoreによる高度なAI機能
+- **データ駆動**: ユーザーの健康データに基づく個別最適化されたアドバイス
+
+### ⚠️ 重要な免責事項
+
+**医療免責事項**: 
+- 本アプリは健康管理をサポートするツールであり、医療診断や治療の代替手段ではありません
+- 健康上の問題や症状については、必ず医師や医療専門家にご相談ください
+- 本アプリの提供する情報やアドバイスは一般的な健康情報であり、個人の医学的状態に対する専門的な医療アドバイスではありません
+- 緊急時や深刻な健康問題の場合は、直ちに医療機関を受診してください
+- 本アプリの使用により生じた健康上の問題について、開発者は一切の責任を負いません
+
+**データ管理について**:
+- 本アプリはユーザー自身のAWSアカウントにデプロイされるため、すべての健康データはユーザーが管理するAWS環境に保存されます
+- 開発者はユーザーの健康データにアクセスすることはありません
+- データの管理、セキュリティ、バックアップはユーザーの責任となります
+- AWSのセキュリティベストプラクティスに従ってデータが暗号化されます
+
+## 🏗️ Healthmate-App について
 
 Healthmate-App は、4つの独立したHealthmateサービスを統合管理するメタリポジトリです。一括デプロイメント機能により、複数のサービスを効率的に管理できます。
 
+### 📦 統合管理の価値
+
+- **🚀 ワンコマンドデプロイ**: 複雑な4サービス構成を1つのコマンドでデプロイ
+- **🔄 依存関係管理**: サービス間の正しいデプロイ順序を自動管理
+- **⚡ 効率的な開発**: 環境セットアップから本番デプロイまでの一元化
+- **🛡️ エラー防止**: 前提条件チェックによる事前問題発見
+- **📋 統一された運用**: 全サービスの一貫した管理とモニタリング
+
 ## 🏗️ アーキテクチャ概要
 
+Healthmate App は、4つの専門化されたマイクロサービスで構成されています：
+
 ```
-Healthmate-App (統合管理)
-├── Healthmate-Core (認証基盤)
-├── Healthmate-HealthManager (データ基盤)
-├── Healthmate-CoachAI (AI エージェント)
-└── Healthmate-Frontend (フロントエンド)
+🏥 Healthmate App (AI健康管理プラットフォーム)
+├── 🔐 Healthmate-Core (認証基盤)
+├── 📊 Healthmate-HealthManager (データ基盤・MCP)
+├── 🤖 Healthmate-CoachAI (AI健康コーチ)
+└── 📱 Healthmate-Frontend (Webアプリ)
 ```
 
-### サービス構成
+### 🔧 サービス構成
 
-| サービス | 役割 | 技術スタック | 依存関係 |
+| サービス | 役割 | 技術スタック | 主な機能 |
 |---------|------|-------------|----------|
-| **Healthmate-Core** | 認証基盤 | AWS CDK + Cognito | なし |
-| **Healthmate-HealthManager** | データ基盤・MCP サーバー | AWS Lambda + DynamoDB | Core |
-| **Healthmate-CoachAI** | AI健康コーチ | Bedrock AgentCore | HealthManager |
-| **Healthmate-Frontend** | Webフロントエンド | React + TypeScript | 全サービス |
+| **🔐 Healthmate-Core** | 認証基盤 | AWS CDK + Cognito | ユーザー認証・認可、JWT発行 |
+| **📊 Healthmate-HealthManager** | データ基盤・MCP サーバー | AWS Lambda + DynamoDB | 健康データCRUD、MCP API提供 |
+| **🤖 Healthmate-CoachAI** | AI健康コーチ | Bedrock AgentCore + Strands | パーソナライズされた健康アドバイス |
+| **📱 Healthmate-Frontend** | Webアプリケーション | React + TypeScript + Vite | ユーザーインターフェース、チャット機能 |
+
+### 🔄 データフローと連携
+
+```
+👤 ユーザー
+    ↓ (健康データ入力・チャット)
+📱 Healthmate-Frontend
+    ↓ (JWT認証 + API呼び出し)
+🤖 Healthmate-CoachAI
+    ↓ (MCP プロトコル)
+📊 Healthmate-HealthManager
+    ↓ (データ永続化)
+🗄️ DynamoDB (健康データストレージ)
+```
+
+### 🔐 認証フロー
+
+```
+🔐 Healthmate-Core (Cognito User Pool)
+    ↓ (JWT Token発行)
+📱 Frontend → 🤖 CoachAI → 📊 HealthManager
+    (全サービスでJWT認証を共有)
+```
+
+### 🎯 使用例
+
+#### 👤 エンドユーザーの体験
+1. **アカウント作成**: Webアプリでユーザー登録
+2. **健康目標設定**: 短期「3kg減量」、中期「半年でダイエット」、長期「100歳まで健康」など
+3. **日々の記録**: 食事、運動、体重などの健康データを入力
+4. **健康上の心配事相談**: 「最近疲れやすいのですが」「肩こりがひどくて」などの不安や症状を相談
+5. **AIコーチとの対話**: 「今日の運動メニューを教えて」「ダイエットの進捗はどう？」などの質問
+6. **パーソナライズされたアドバイス**: ユーザーのデータと目標に基づく個別アドバイス
+
+#### 🔧 開発者・運用者の体験
+1. **環境セットアップ**: `./check_prerequisites.sh` で前提条件確認
+2. **一括デプロイ**: `./deploy_all.sh dev` で全サービスを一度にデプロイ
+3. **統合テスト**: 全サービス連携の動作確認
+4. **本番デプロイ**: `./deploy_all.sh prod --region ap-northeast-1`
+5. **運用管理**: ログ監視、スケーリング、アップデート管理
 
 ## 🚀 クイックスタート
 
@@ -37,6 +144,9 @@ git clone https://github.com/tomofuminijo/Healthmate-HealthManager.git
 git clone https://github.com/tomofuminijo/Healthmate-CoachAI.git
 git clone https://github.com/tomofuminijo/Healthmate-Frontend.git
 git clone https://github.com/tomofuminijo/Healthmate-App.git
+
+# ワンライナーでのクローン（上記と同じ結果）
+# git clone https://github.com/tomofuminijo/Healthmate-Core.git && git clone https://github.com/tomofuminijo/Healthmate-HealthManager.git && git clone https://github.com/tomofuminijo/Healthmate-CoachAI.git && git clone https://github.com/tomofuminijo/Healthmate-Frontend.git && git clone https://github.com/tomofuminijo/Healthmate-App.git
 
 # ディレクトリ構造確認
 ls -la
@@ -664,6 +774,6 @@ git checkout <previous-version>
 
 ---
 
-**最終更新**: 2025年12月25日  
-**バージョン**: 1.0.0  
+**最終更新**: 2025年12月26日  
+**バージョン**: 1.1.0  
 **メンテナー**: Healthmate開発チーム
