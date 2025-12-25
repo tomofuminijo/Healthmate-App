@@ -23,20 +23,244 @@ Healthmate-App (統合管理)
 
 ## 🚀 クイックスタート
 
-### 前提条件
+### リポジトリのクローン
 
-- AWS CLI が設定済みであること
-- 適切なAWS認証情報が設定されていること
-- 各サービスディレクトリが同じレベルに配置されていること
+まず、すべてのHealthmateサービスをクローンします：
 
 ```bash
-# ディレクトリ構造
-parent-directory/
-├── Healthmate-Core/
-├── Healthmate-HealthManager/
-├── Healthmate-CoachAI/
-├── Healthmate-Frontend/
-└── Healthmate-App/          # このリポジトリ
+# 推奨: 専用ディレクトリを作成
+mkdir healthmate-workspace && cd healthmate-workspace
+
+# 5つのリポジトリを一括クローン
+git clone https://github.com/tomofuminijo/Healthmate-Core.git
+git clone https://github.com/tomofuminijo/Healthmate-HealthManager.git  
+git clone https://github.com/tomofuminijo/Healthmate-CoachAI.git
+git clone https://github.com/tomofuminijo/Healthmate-Frontend.git
+git clone https://github.com/tomofuminijo/Healthmate-App.git
+
+# ディレクトリ構造確認
+ls -la
+# healthmate-workspace/
+# ├── Healthmate-Core/
+# ├── Healthmate-HealthManager/
+# ├── Healthmate-CoachAI/
+# ├── Healthmate-Frontend/
+# └── Healthmate-App/
+```
+
+### 前提条件確認
+
+まず、すべての前提条件が満たされているかチェックしましょう：
+
+```bash
+# Healthmate-App ディレクトリに移動
+cd Healthmate-App
+
+# 前提条件の自動チェック
+./check_prerequisites.sh
+```
+
+このスクリプトは以下をチェックします：
+- 必須ソフトウェア（AWS CLI, Python, Node.js, npm, jq, Git）
+- AWS認証設定
+- ディレクトリ構造
+- Python仮想環境
+- Node.js依存関係
+- デプロイスクリプト
+
+### 初回セットアップ
+
+前提条件に問題がある場合は、以下の手順で環境をセットアップしてください：
+
+```bash
+# 1. Python仮想環境セットアップ（各サービス）
+cd ../Healthmate-Core && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && cd ../Healthmate-App
+cd ../Healthmate-HealthManager && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && cd ../Healthmate-App
+cd ../Healthmate-CoachAI && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt && cd ../Healthmate-App
+
+# 2. HealthManager CDK Python環境セットアップ
+cd ../Healthmate-HealthManager/cdk && python3 -m venv .venv && source .venv/bin/activate && cd ../../Healthmate-App
+
+# 3. Node.js依存関係インストール（Frontendのみ）
+cd ../Healthmate-Frontend && npm install && cd ../Healthmate-App
+
+# 4. AWS認証設定
+aws configure
+# または
+aws sso login
+
+# 5. 前提条件再チェック
+./check_prerequisites.sh
+```
+
+### 前提条件
+
+#### 必須ソフトウェア
+
+| ソフトウェア | バージョン | 用途 | インストール確認 |
+|-------------|-----------|------|-----------------|
+| **AWS CLI** | 2.0+ | AWSリソース管理 | `aws --version` |
+| **Python** | 3.12+ | Core, HealthManager, CoachAI | `python3 --version` |
+| **Node.js** | 18+ | Frontend, CDK | `node --version` |
+| **npm** | 9+ | パッケージ管理 | `npm --version` |
+| **jq** | 1.6+ | JSON処理 | `jq --version` |
+| **Git** | 2.0+ | バージョン管理 | `git --version` |
+
+#### AWS設定
+
+```bash
+# AWS CLI設定確認
+aws configure list
+aws sts get-caller-identity
+
+# 必要なAWS権限
+# - CloudFormation (フルアクセス)
+# - IAM (ロール作成・管理)
+# - S3 (バケット作成・管理)
+# - DynamoDB (テーブル作成・管理)
+# - Lambda (関数作成・管理)
+# - Cognito (User Pool作成・管理)
+# - Bedrock AgentCore (エージェント管理)
+# - CloudFront (ディストリビューション管理)
+```
+
+#### Python環境設定
+
+各サービスで仮想環境が必要です：
+
+```bash
+# Python仮想環境の確認・作成（各サービスディレクトリで実行）
+cd Healthmate-Core
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+cd ../Healthmate-HealthManager  
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+cd ../Healthmate-CoachAI
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt  # 開発・テスト用依存関係
+# 注意: デプロイ時は agent/requirements.txt が自動使用されます
+
+# HealthManager CDK用の仮想環境
+cd ../Healthmate-HealthManager/cdk
+python3 -m venv .venv
+source .venv/bin/activate
+# CDKの依存関係は cdk.json で管理されます
+```
+
+#### Node.js環境設定
+
+Frontend で必要です：
+
+```bash
+# Frontendの依存関係インストール
+cd Healthmate-Frontend
+npm install
+
+# グローバルCDKインストール（未インストールの場合）
+npm install -g aws-cdk
+cdk --version
+```
+
+**注意**: HealthManager は Python CDK を使用するため、Node.js 依存関係は不要です。
+
+#### 特殊ツール
+
+```bash
+# jq（JSON処理ツール）のインストール
+# macOS
+brew install jq
+
+# Ubuntu/Debian
+sudo apt-get install jq
+
+# Amazon Linux
+sudo yum install jq
+
+# bedrock-agentcore-control CLI（CoachAI用）
+# AWS CLIに含まれているため、追加インストール不要
+aws bedrock-agentcore-control help
+```
+
+#### ディレクトリ構造
+
+各サービスディレクトリが同じレベルに配置されている必要があります：
+
+```bash
+# 推奨ディレクトリ構造
+healthmate-workspace/
+├── Healthmate-Core/           # 認証基盤
+├── Healthmate-HealthManager/  # データ基盤・MCP
+├── Healthmate-CoachAI/        # AI エージェント
+├── Healthmate-Frontend/       # React フロントエンド
+└── Healthmate-App/            # このリポジトリ（統合管理）
+```
+
+#### 環境確認スクリプト
+
+すべての前提条件を確認するには：
+
+```bash
+# Healthmate-App ディレクトリで実行
+./check_prerequisites.sh
+```
+
+#### 初回セットアップ手順
+
+```bash
+# 1. 全サービスのクローン（推奨ディレクトリ構造）
+mkdir healthmate-workspace && cd healthmate-workspace
+
+# 各サービスリポジトリをクローン
+git clone https://github.com/tomofuminijo/Healthmate-Core.git
+git clone https://github.com/tomofuminijo/Healthmate-HealthManager.git  
+git clone https://github.com/tomofuminijo/Healthmate-CoachAI.git
+git clone https://github.com/tomofuminijo/Healthmate-Frontend.git
+git clone https://github.com/tomofuminijo/Healthmate-App.git
+
+# ワンライナーでのクローン（上記と同じ結果）
+# git clone https://github.com/tomofuminijo/Healthmate-Core.git && git clone https://github.com/tomofuminijo/Healthmate-HealthManager.git && git clone https://github.com/tomofuminijo/Healthmate-CoachAI.git && git clone https://github.com/tomofuminijo/Healthmate-Frontend.git && git clone https://github.com/tomofuminijo/Healthmate-App.git
+
+# ディレクトリ構造確認
+ls -la
+# 以下のような構造になります：
+# healthmate-workspace/
+# ├── Healthmate-Core/
+# ├── Healthmate-HealthManager/
+# ├── Healthmate-CoachAI/
+# ├── Healthmate-Frontend/
+# └── Healthmate-App/
+
+# 2. Python仮想環境セットアップ
+cd Healthmate-Core && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && cd ..
+cd Healthmate-HealthManager && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && cd ..
+cd Healthmate-CoachAI && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt && cd ..
+
+# 注意: CoachAI は開発用に requirements-dev.txt を使用
+# デプロイ時は agent/requirements.txt が自動的に使用されます
+
+# 3. HealthManager CDK Python環境セットアップ
+cd Healthmate-HealthManager/cdk && python3 -m venv .venv && source .venv/bin/activate && cd ../..
+
+# 4. Node.js依存関係インストール（Frontendのみ）
+cd Healthmate-Frontend && npm install && cd ..
+
+# 5. AWS認証設定
+aws configure
+# または
+aws sso login
+
+# 6. 前提条件確認
+cd Healthmate-App
+./check_prerequisites.sh
+
+# 7. 初回デプロイ
+./deploy_all.sh dev
 ```
 
 ### 一括デプロイ
@@ -204,9 +428,49 @@ aws configure
 
 # または SSOログイン
 aws sso login
+
+# 認証確認
+aws sts get-caller-identity
 ```
 
-#### 2. サービスディレクトリが見つからない
+#### 2. Python仮想環境エラー
+
+```bash
+❌ ModuleNotFoundError: No module named 'boto3'
+```
+
+**解決方法:**
+```bash
+# 各サービスで仮想環境をアクティベート
+cd Healthmate-Core
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 他のサービスでも同様に実行
+cd ../Healthmate-HealthManager
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### 3. Node.js依存関係エラー
+
+```bash
+❌ Error: Cannot find module 'aws-cdk-lib'
+```
+
+**解決方法:**
+```bash
+# Frontend依存関係インストール
+cd Healthmate-Frontend
+npm install
+
+# グローバルCDKインストール
+npm install -g aws-cdk
+
+# 注意: HealthManagerはPython CDKを使用するため、Node.js依存関係は不要です
+```
+
+#### 4. サービスディレクトリが見つからない
 
 ```bash
 ❌ サービスディレクトリが見つかりません: ../Healthmate-Core
@@ -216,15 +480,70 @@ aws sso login
 - Healthmate-App が他の4つのサービスと同じレベルに配置されているか確認
 - ディレクトリ名が正確であることを確認
 
-#### 3. デプロイスクリプトが見つからない
+#### 5. デプロイスクリプトが見つからない
 
 ```bash
 ❌ Core のデプロイスクリプトが見つかりません
 ```
 
 **解決方法:**
-- 各サービスに必要なデプロイスクリプトが存在することを確認
-- スクリプトに実行権限があることを確認
+```bash
+# スクリプト存在確認
+ls -la ../Healthmate-Core/deploy.sh
+
+# 実行権限付与
+chmod +x ../Healthmate-Core/deploy.sh
+chmod +x ../Healthmate-Core/destroy.sh
+```
+
+#### 6. CoachAI デプロイエラー
+
+```bash
+❌ AgentCore エージェントの作成に失敗しました
+```
+
+**解決方法:**
+```bash
+# IAMロールの確認
+aws iam get-role --role-name Healthmate-CoachAI-AgentCore-Runtime-Role
+
+# 手動でIAMロール作成
+cd ../Healthmate-CoachAI
+python create_custom_iam_role.py
+
+# 再デプロイ
+./deploy_to_aws.sh
+```
+
+#### 7. HealthManager Credential Provider エラー
+
+```bash
+❌ ConflictException: Unable to create SecretsManager secret
+```
+
+**解決方法:**
+- 自動リトライ機能が実装済み（30回、1秒間隔）
+- 通常は自動的に解決されます
+- 継続する場合は手動でSecretsManagerの古いシークレットを削除
+
+#### 8. Frontend リージョン設定エラー
+
+```bash
+❌ Frontend が間違ったリージョンに接続している
+```
+
+**解決方法:**
+```bash
+# 環境変数ファイル確認
+cat ../Healthmate-Frontend/.env
+
+# 正しいリージョンを設定
+echo "VITE_AWS_REGION=ap-northeast-1" >> ../Healthmate-Frontend/.env
+
+# 再ビルド
+cd ../Healthmate-Frontend
+npm run build
+```
 
 ### デバッグ方法
 
