@@ -144,7 +144,7 @@ wait_for_service_ready() {
                 env_suffix="_$environment"
             fi
             local expected_runtime_name="healthmate_coach_ai${env_suffix}"
-            
+            log_info "エージェント状態確認します: $expected_runtime_name"
             while [[ $elapsed_time -lt $max_wait_time ]]; do
                 # bedrock-agentcore-control APIでエージェントの状態を確認
                 local runtime_status=$(aws bedrock-agentcore-control list-agent-runtimes \
